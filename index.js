@@ -1,11 +1,12 @@
 var Service, Characteristic;
 const request = require('request');
 const packageJson = require('./package.json')
+var pollingtoevent = require("polling-to-event");
 
 module.exports = function(homebridge) {
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
-  homebridge.registerAccessory('homebridge-http-garage', 'GarageDoorOpener', GarageDoorOpener);
+  homebridge.registerAccessory('homebridge-http-garage-dp2', 'GarageDoorOpener', GarageDoorOpener);
 };
 
 function GarageDoorOpener(log, config) {
@@ -25,6 +26,7 @@ function GarageDoorOpener(log, config) {
 
   this.openURL = config.openURL;
   this.closeURL = config.closeURL;
+  this.stateURL = config.stateURL;
 
   this.openTime = config.openTime || 5;
   this.closeTime = config.closeTime || 5;
@@ -42,6 +44,8 @@ function GarageDoorOpener(log, config) {
   this.log(this.name);
 
   this.service = new Service.GarageDoorOpener(this.name);
+
+  this.init();
 }
 
 GarageDoorOpener.prototype = {
@@ -63,6 +67,40 @@ GarageDoorOpener.prototype = {
       function(error, response, body) {
         callback(error, response, body);
       });
+  },
+
+  // init: function() {
+    
+  // },
+
+  getCurrentState: function(callback) {
+    var state = -0;
+    this._httpRequest(this.stateURL, '', this.http_method, function(error, response, responseBody) {
+      if (error) {
+        // this.log('[!] Error setting targetDoorState: %s', error.message);
+        callback(error);
+      } else {
+        // this.log(responseBody);
+        // switch (responseBody) {
+        //   case "OPEN":
+        //     state = 0;
+        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+        //     // this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPENING);
+        //     this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+            
+        //     break;
+        //   case "CLOSED":
+        //     state = 1;
+        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+        //     // this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSING);
+        //     this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+        //     break;
+        // }
+        callback(null, state);
+      }
+    }.bind(this)); 
   },
 
   setTargetDoorState: function(value, callback) {
@@ -132,6 +170,48 @@ GarageDoorOpener.prototype = {
       .getCharacteristic(Characteristic.TargetDoorState)
       .on('set', this.setTargetDoorState.bind(this));
 
+    this.service
+      .getCharacteristic(Characteristic.CurrentDoorState)
+      .on('get', this.getCurrentState.bind(this));
+
     return [this.informationService, this.service];
   }
 };
+
+GarageDoorOpener.prototype.init = function() {
+  var self = this;
+  self.log("Starting polling with an interval of %s ms", 5000);
+  var emitter = pollingtoevent(function (done) {
+    self._httpRequest(self.stateURL, '', self.http_method, function(error, response, responseBody) {
+      if (error) {
+        self.log('[!] Error getting current state: %s', error.message);
+        done(error);
+      } else {
+        // self.log('[!] got response in poll: %s', responseBody);
+        done(null, responseBody);
+      }
+    });
+    // done(null);
+  }, {longpolling:true, interval: 5000});
+  
+  emitter.on("longpoll", function (value) {
+    self.log("Polling noticed status change to, notifying devices");
+    self.log(value);
+
+    switch (value) {
+      case "OPEN":
+        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+        // self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPENING);
+        self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+        break;
+      case "CLOSED":
+        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+        // self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSING);
+        self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+        break;
+    }
+  });
+}
+

@@ -1,8 +1,10 @@
 # homebridge-http-garage
 
-[![npm](https://img.shields.io/npm/v/homebridge-http-garage.svg)](https://www.npmjs.com/package/homebridge-http-garage) [![npm](https://img.shields.io/npm/dt/homebridge-http-garage.svg)](https://www.npmjs.com/package/homebridge-http-garage)
+[![npm](https://img.shields.io/npm/v/homebridge-http-garage-dp2.svg)](https://www.npmjs.com/package/homebridge-http-garage-dp2) [![npm](https://img.shields.io/npm/dt/homebridge-http-garage-dp2.svg)](https://www.npmjs.com/package/homebridge-http-garage-dp2)
 
 ## Description
+
+Forked from: [Tomm Rodrigues](https://github.com/Tommrodrigues/homebridge-http-garage)
 
 This [homebridge](https://github.com/nfarina/homebridge) plugin exposes a web-based garage opener to Apple's [HomeKit](http://www.apple.com/ios/home/). Using simple HTTP requests, the plugin allows you to open/close the garage.
 
@@ -20,7 +22,8 @@ This [homebridge](https://github.com/nfarina/homebridge) plugin exposes a web-ba
        "accessory": "GarageDoorOpener",
        "name": "Garage",
        "openURL": "http://myurl.com/open",
-       "closeURL": "http://myurl.com/close"
+       "closeURL": "http://myurl.com/close",
+       "stateURL": "http://myurl.com"
      }
 ]
 ```

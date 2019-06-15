@@ -1,6 +1,6 @@
 {
-  "name": "homebridge-http-garage",
-  "version": "1.1.8",
+  "name": "homebridge-http-garage-dp2",
+  "version": "0.0.59",
   "description": "Homebridge plugin for a web-based garage",
   "main": "index.js",
   "engines": {
@@ -12,18 +12,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tommrodrigues/homebridge-http-garage.git"
+    "url": "git+https://github.com/noobydp/homebridge-http-garage.git"
   },
   "dependencies": {
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "polling-to-event": "^2.0.2"
   },
   "keywords": [
     "homebridge-plugin"
   ],
-  "author": "Tom Rodrigues",
+  "author": "Noobydp",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Tommrodrigues/homebridge-http-garage/issues"
+    "url": "https://github.com/noobydp/homebridge-http-garage/issues"
   },
-  "homepage": "https://github.com/Tommrodrigues/homebridge-http-garage#readme"
+  "homepage": "https://github.com/noobydp/homebridge-http-garage#readme"
 }
