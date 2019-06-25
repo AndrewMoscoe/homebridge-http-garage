@@ -34,6 +34,8 @@ function GarageDoorOpener(log, config) {
   this.autoLock = config.autoLock || false;
   this.autoLockDelay = config.autoLockDelay || 10;
 
+  this.pollingDelay = config.pollingDelay || 5000;
+
   if (this.username != null && this.password != null) {
     this.auth = {
       user: this.username,
@@ -69,35 +71,14 @@ GarageDoorOpener.prototype = {
       });
   },
 
-  // init: function() {
-    
-  // },
-
   getCurrentState: function(callback) {
     var state = -0;
     this._httpRequest(this.stateURL, '', this.http_method, function(error, response, responseBody) {
       if (error) {
-        // this.log('[!] Error setting targetDoorState: %s', error.message);
+        this.log('[!] Error setting targetDoorState: %s', error.message);
         callback(error);
       } else {
-        // this.log(responseBody);
-        // switch (responseBody) {
-        //   case "OPEN":
-        //     state = 0;
-        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-        //     // this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPENING);
-        //     this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-            
-        //     break;
-        //   case "CLOSED":
-        //     state = 1;
-        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        //     // this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSING);
-        //     this.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        //     this.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        //     break;
-        // }
+        this.log('[i] Current State %s', state);
         callback(null, state);
       }
     }.bind(this)); 
@@ -155,7 +136,6 @@ GarageDoorOpener.prototype = {
   },
 
   getServices: function() {
-
     this.service.setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
     this.service.setCharacteristic(Characteristic.TargetDoorState, Characteristic.TargetDoorState.CLOSED);
 
@@ -180,34 +160,30 @@ GarageDoorOpener.prototype = {
 
 GarageDoorOpener.prototype.init = function() {
   var self = this;
-  self.log("Starting polling with an interval of %s ms", 5000);
+  self.log("Starting polling with an interval of %s ms", self.pollingDelay);
   var emitter = pollingtoevent(function (done) {
     self._httpRequest(self.stateURL, '', self.http_method, function(error, response, responseBody) {
       if (error) {
         self.log('[!] Error getting current state: %s', error.message);
         done(error);
       } else {
-        // self.log('[!] got response in poll: %s', responseBody);
+        // self.log('[i] got response in poll: %s', responseBody);
         done(null, responseBody);
       }
     });
-    // done(null);
-  }, {longpolling:true, interval: 5000});
+  }, {longpolling:true, interval: self.pollingDelay});
   
   emitter.on("longpoll", function (value) {
-    self.log("Polling noticed status change to, notifying devices");
-    self.log(value);
-
+    self.log("[i] Polling noticed status changed to: %s, notifying devices", value);
+    
     switch (value) {
       case "OPEN":
         self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-        // self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPENING);
         self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
         self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
         break;
       case "CLOSED":
         self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        // self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSING);
         self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
         self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
         break;

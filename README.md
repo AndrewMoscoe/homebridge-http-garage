@@ -35,6 +35,7 @@ This [homebridge](https://github.com/nfarina/homebridge) plugin exposes a web-ba
 | `name` | Name to appear in the Home app | N/A |
 | `openURL` | URL to trigger the opening of your garage | N/A |
 | `closeURL` | URL to trigger the closing of your garage | N/A |
+| `stateURL` | URL to get the status of the garage (must return OPEN or CLOSED as text) | N/A | 
 
 ### Optional fields
 | Key | Description | Default |
@@ -55,3 +56,4 @@ This [homebridge](https://github.com/nfarina/homebridge) plugin exposes a web-ba
 | `serial` _(optional)_ | Appears under the _Serial_ field for the accessory | version |
 | `manufacturer` _(optional)_ | Appears under the _Manufacturer_ field for the accessory | author |
 | `firmware` _(optional)_ | Appears under the _Firmware_ field for the accessory | version |
+| `pollingDelay` _(opttional)_ | How often the garage is polled for its status | `5000` |
