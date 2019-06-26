@@ -75,7 +75,7 @@ GarageDoorOpener.prototype = {
     var state = -0;
     this._httpRequest(this.stateURL, '', this.http_method, function(error, response, responseBody) {
       if (error) {
-        this.log('[!] Error setting targetDoorState: %s', error.message);
+        this.log('[!] Error getting targetDoorState: %s', error.message);
         callback(error);
       } else {
         this.log('[i] Current State %s', state);
@@ -164,7 +164,7 @@ GarageDoorOpener.prototype.init = function() {
   var emitter = pollingtoevent(function (done) {
     self._httpRequest(self.stateURL, '', self.http_method, function(error, response, responseBody) {
       if (error) {
-        self.log('[!] Error getting current state: %s', error.message);
+        self.log('[!] Error polling current state: %s', error.message);
         done(error);
       } else {
         // self.log('[i] got response in poll: %s', responseBody);
@@ -188,6 +188,10 @@ GarageDoorOpener.prototype.init = function() {
         self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
         break;
     }
+  });
+
+  emitter.on("err", function(err) {
+    self.log("Polling failed, error was %s", err);
   });
 }
 
