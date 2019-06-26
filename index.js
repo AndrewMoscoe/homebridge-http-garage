@@ -190,8 +190,8 @@ GarageDoorOpener.prototype.init = function() {
     }
   });
 
-  emitter.on("err", function(err) {
-    self.log("Polling failed, error was %s", err);
+  emitter.on("error", function(error) {
+    self.log("Polling failed, error was %s", error);
   });
 }
 
