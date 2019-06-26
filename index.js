@@ -34,7 +34,7 @@ function GarageDoorOpener(log, config) {
   this.autoLock = config.autoLock || false;
   this.autoLockDelay = config.autoLockDelay || 10;
 
-  this.enablePolling = config.enablePolling || true;
+  this.enablePolling = config.enablePolling;
   this.pollingDelay = config.pollingDelay || 5000;
 
   if (this.username != null && this.password != null) {

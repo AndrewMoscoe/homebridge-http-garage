@@ -1,6 +1,6 @@
 {
   "name": "homebridge-http-garage-dp2",
-  "version": "0.0.63",
+  "version": "0.0.64",
   "description": "Homebridge plugin for a web-based garage",
   "main": "index.js",
   "engines": {
