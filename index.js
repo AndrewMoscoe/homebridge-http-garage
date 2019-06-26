@@ -3,7 +3,7 @@ const request = require('request');
 const packageJson = require('./package.json')
 var pollingtoevent = require("polling-to-event");
 
-module.exports = function(homebridge) {
+module.exports = function (homebridge) {
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
   homebridge.registerAccessory('homebridge-http-garage-dp2', 'GarageDoorOpener', GarageDoorOpener);
@@ -34,6 +34,7 @@ function GarageDoorOpener(log, config) {
   this.autoLock = config.autoLock || false;
   this.autoLockDelay = config.autoLockDelay || 10;
 
+  this.enablePolling = config.enablePolling || true;
   this.pollingDelay = config.pollingDelay || 5000;
 
   if (this.username != null && this.password != null) {
@@ -52,28 +53,28 @@ function GarageDoorOpener(log, config) {
 
 GarageDoorOpener.prototype = {
 
-  identify: function(callback) {
+  identify: function (callback) {
     this.log('Identify requested!');
     callback();
   },
 
-  _httpRequest: function(url, body, method, callback) {
+  _httpRequest: function (url, body, method, callback) {
     request({
-        url: url,
-        body: body,
-        method: this.http_method,
-        timeout: this.timeout,
-        rejectUnauthorized: false,
-        auth: this.auth
-      },
-      function(error, response, body) {
+      url: url,
+      body: body,
+      method: this.http_method,
+      timeout: this.timeout,
+      rejectUnauthorized: false,
+      auth: this.auth
+    },
+      function (error, response, body) {
         callback(error, response, body);
       });
   },
 
-  getCurrentState: function(callback) {
+  getCurrentState: function (callback) {
     var state = -0;
-    this._httpRequest(this.stateURL, '', this.http_method, function(error, response, responseBody) {
+    this._httpRequest(this.stateURL, '', this.http_method, function (error, response, responseBody) {
       if (error) {
         this.log('[!] Error getting targetDoorState: %s', error.message);
         callback(error);
@@ -81,17 +82,17 @@ GarageDoorOpener.prototype = {
         this.log('[i] Current State %s', state);
         callback(null, state);
       }
-    }.bind(this)); 
+    }.bind(this));
   },
 
-  setTargetDoorState: function(value, callback) {
+  setTargetDoorState: function (value, callback) {
     this.log('[+] Setting targetDoorState to %s', value);
     if (value === 1) {
       url = this.closeURL;
     } else {
       url = this.openURL;
     }
-    this._httpRequest(url, '', this.http_method, function(error, response, responseBody) {
+    this._httpRequest(url, '', this.http_method, function (error, response, responseBody) {
       if (error) {
         this.log('[!] Error setting targetDoorState: %s', error.message);
         callback(error);
@@ -111,7 +112,7 @@ GarageDoorOpener.prototype = {
     }.bind(this));
   },
 
-  simulateOpen: function() {
+  simulateOpen: function () {
     this.service.setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.OPENING);
     setTimeout(() => {
       this.service.setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.OPEN);
@@ -119,7 +120,7 @@ GarageDoorOpener.prototype = {
     }, this.openTime * 1000);
   },
 
-  simulateClose: function() {
+  simulateClose: function () {
     this.service.setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSING);
     setTimeout(() => {
       this.service.setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
@@ -127,7 +128,7 @@ GarageDoorOpener.prototype = {
     }, this.closeTime * 1000);
   },
 
-  autoLockFunction: function() {
+  autoLockFunction: function () {
     this.log('[+] Waiting %s seconds for autolock', this.autoLockDelay);
     setTimeout(() => {
       this.service.setCharacteristic(Characteristic.TargetDoorState, Characteristic.TargetDoorState.CLOSED);
@@ -135,7 +136,7 @@ GarageDoorOpener.prototype = {
     }, this.autoLockDelay * 1000);
   },
 
-  getServices: function() {
+  getServices: function () {
     this.service.setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
     this.service.setCharacteristic(Characteristic.TargetDoorState, Characteristic.TargetDoorState.CLOSED);
 
@@ -158,40 +159,42 @@ GarageDoorOpener.prototype = {
   }
 };
 
-GarageDoorOpener.prototype.init = function() {
+GarageDoorOpener.prototype.init = function () {
   var self = this;
-  self.log("Starting polling with an interval of %s ms", self.pollingDelay);
-  var emitter = pollingtoevent(function (done) {
-    self._httpRequest(self.stateURL, '', self.http_method, function(error, response, responseBody) {
-      if (error) {
-        self.log('[!] Error polling current state: %s', error.message);
-        done(error);
-      } else {
-        // self.log('[i] got response in poll: %s', responseBody);
-        done(null, responseBody);
+  if (self.enablePolling) {
+    self.log("Starting polling with an interval of %s ms", self.pollingDelay);
+    var emitter = pollingtoevent(function (done) {
+      self._httpRequest(self.stateURL, '', self.http_method, function (error, response, responseBody) {
+        if (error) {
+          self.log('[!] Error polling current state: %s', error.message);
+          done(error);
+        } else {
+          // self.log('[i] got response in poll: %s', responseBody);
+          done(null, responseBody);
+        }
+      });
+    }, { longpolling: true, interval: self.pollingDelay });
+
+    emitter.on("longpoll", function (value) {
+      self.log("[i] Polling noticed status changed to: %s, notifying devices", value);
+
+      switch (value) {
+        case "OPEN":
+          self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+          self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+          self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
+          break;
+        case "CLOSED":
+          self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+          self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+          self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
+          break;
       }
     });
-  }, {longpolling:true, interval: self.pollingDelay});
-  
-  emitter.on("longpoll", function (value) {
-    self.log("[i] Polling noticed status changed to: %s, notifying devices", value);
-    
-    switch (value) {
-      case "OPEN":
-        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-        self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.OPEN);
-        break;
-      case "CLOSED":
-        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        self.service.getCharacteristic(Characteristic.CurrentDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        self.service.getCharacteristic(Characteristic.TargetDoorState).updateValue(Characteristic.CurrentDoorState.CLOSED);
-        break;
-    }
-  });
 
-  emitter.on("error", function(error) {
-    self.log("Polling failed, error was %s", error);
-  });
+    emitter.on("error", function (error) {
+      self.log("Polling failed, error was %s", error);
+    });
+  }
 }
 

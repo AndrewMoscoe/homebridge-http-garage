@@ -44,6 +44,8 @@ This [homebridge](https://github.com/nfarina/homebridge) plugin exposes a web-ba
 | `closeTime` _(optional)_ | Time (in seconds) to simulate your garage closing | `5` |
 | `autoLock` _(optional)_ | Whether your garage should auto-close after being opened | `false` |
 | `autoLockDelay` _(optional)_ | Time (in seconds) until your garage will automatically close (if enabled) | `10` |
+| `enablePolling` _(optional)_ | Poll the garage for its status and update HomeKit | `true` |
+| `pollingDelay` _(opttional)_ | How often the garage is polled for its status | `5000` |
 
 ### Additional options
 | Key | Description | Default |
@@ -56,4 +58,4 @@ This [homebridge](https://github.com/nfarina/homebridge) plugin exposes a web-ba
 | `serial` _(optional)_ | Appears under the _Serial_ field for the accessory | version |
 | `manufacturer` _(optional)_ | Appears under the _Manufacturer_ field for the accessory | author |
 | `firmware` _(optional)_ | Appears under the _Firmware_ field for the accessory | version |
-| `pollingDelay` _(opttional)_ | How often the garage is polled for its status | `5000` |
+
