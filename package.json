@@ -1,11 +1,11 @@
 {
-  "name": "homebridge-http-garage-dp2",
-  "version": "0.0.64",
+  "name": "homebridge-http-garage-lowercase",
+  "version": "2.0.0",
   "description": "Homebridge plugin for a web-based garage",
   "main": "index.js",
   "engines": {
-    "homebridge": "^0.4.46",
-    "node": "^10.0.0"
+    "homebridge": ">=0.4.46",
+    "node": ">=10.0.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,16 +15,16 @@
     "url": "git+https://github.com/noobydp/homebridge-http-garage.git"
   },
   "dependencies": {
-    "request": "^2.88.0",
-    "polling-to-event": "^2.0.2"
+    "request": ">=2.88.0",
+    "polling-to-event": ">=2.0.2"
   },
   "keywords": [
     "homebridge-plugin"
   ],
-  "author": "Noobydp",
+  "author": "Andrew Moscoe",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/noobydp/homebridge-http-garage/issues"
+    "url": "https://github.com/AndrewMoscoe/homebridge-http-garage/issues"
   },
-  "homepage": "https://github.com/noobydp/homebridge-http-garage#readme"
+  "homepage": "https://github.com/AndrewMoscoe/homebridge-http-garage#readme"
 }
